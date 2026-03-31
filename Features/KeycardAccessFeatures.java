@@ -346,7 +346,7 @@ public class KeycardAccessFeatures {
     }
 
     /**
-     * Helper method to center text
+     * Helper method to center text .
      */
     private static String padCenter(String text, int width) {
         if (text.length() >= width) return text;
