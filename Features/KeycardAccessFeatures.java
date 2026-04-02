@@ -3,7 +3,7 @@ package Features;
 import Models.Occupant;
 import Models.Keycard;
 import Repositories.OccupantRepo;
-import Repositories.KeycardRepository;
+import Repositories.KeycardRepo;
 import java.util.Scanner;
 import java.util.List;
 
@@ -92,7 +92,7 @@ public class KeycardAccessFeatures {
         }
         
         // Get user's keycard
-        List<Keycard> keycards = KeycardRepository.getKeycardsByOccupantId(occupantId);
+        List<Keycard> keycards = KeycardRepo.getKeycardsByOccupantId(occupantId);
         if (keycards.isEmpty()) {
             System.out.println("\n❌ LOGIN FAILED: No keycard assigned to this occupant.");
             return false;
@@ -119,7 +119,7 @@ public class KeycardAccessFeatures {
         displayVerification(user, userCard);
         
         // Access feature menu
-        accessFeatures(user, userCard, scanner);
+        accessFeatures(user, userCard);
         
         return true;
     }
@@ -134,75 +134,36 @@ public class KeycardAccessFeatures {
         System.out.println("\n✓ Verification Details:");
         System.out.println("  First Name    : " + user.getFirstName());
         System.out.println("  Last Name     : " + user.getLastName());
-        System.out.println("  Occupant ID   : " + user.getId());
-        System.out.println("  Position      : " + user.getPosition());
-        System.out.println("  Room Number   : " + user.getRoomNumber());
+        System.out.println("  Occupant ID   : " + user.getOccupantId());
         System.out.println("\n✓ Keycard Details:");
-        System.out.println("  Card Number   : " + card.getCardNumber());
-        System.out.println("  Access Level  : " + card.getAccessLevelName() + " (Level " + card.getAccessLevel() + ")");
-        System.out.println("  Status        : ACTIVE");
-        System.out.println("  Issued Date   : " + card.getIssueDate());
-        System.out.println("\n✓ Access Level Details:");
-        displayAccessSummary(card);
+        System.out.println("  Keycard ID    : " + card.getKeycardId());
+        System.out.println("  Keycard Code  : " + card.getKeycardCode());
+        System.out.println("  Status        : " + (card.isActive() ? "ACTIVE" : "INACTIVE"));
+        System.out.println("  Issued At     : " + card.getIssuedAt());
     }
 
-    /**
-     * Display access permissions based on keycard level
-     */
-    public static void displayAccessSummary(Keycard card) {
-        System.out.println("\n  Access Permissions for " + card.getAccessLevelName() + ":");
-        System.out.println("    ✓ Common Areas (Cafeteria, Library, Recreation)");
-        
-        if (card.getAccessLevel() >= 2) {
-            System.out.println("    ✓ Residential Areas (Sleeping Quarters, Personal Storage)");
-        }
-        if (card.getAccessLevel() >= 3) {
-            System.out.println("    ✓ Restricted Areas (Medical Bay, Armory, Lab)");
-        }
-        if (card.getAccessLevel() >= 4) {
-            System.out.println("    ✓ Server Room / Command Center (Full Control)");
-        }
-    }
+
 
     /**
-     * Display available features based on access level and handle navigation
+     * Display available features and handle navigation
      */
-    public static void accessFeatures(Occupant user, Keycard card, Scanner input) {
-        scanner = input;
+    public static void accessFeatures(Occupant user, Keycard card) {
         
         while (true) {
             System.out.println("\n╔════════════════════════════════════════════════════════════╗");
             System.out.println("║                    SYSTEM FEATURES MENU                    ║");
             System.out.println("╚════════════════════════════════════════════════════════════╝");
             
-            System.out.println("\nAvailable Features Based on Your Access Level:\n");
+            System.out.println("\nAvailable Features:\n");
             
-            // Level 1 - Common Areas (All users)
             System.out.println("[1] View Keycard Access Information");
-            System.out.println("    └─ View detailed keycard and access permissions");
+            System.out.println("    └─ View detailed keycard information");
             
-            // Level 2 - Residential Areas
-            if (card.getAccessLevel() >= 2) {
-                System.out.println("\n[2] Manage Room Reservations");
-                System.out.println("    └─ View and book residential areas");
-            }
-            
-            // Level 3 - Restricted Areas
-            if (card.getAccessLevel() >= 3) {
-                System.out.println("\n[3] Assign Work Duties");
-                System.out.println("    └─ Manage staff work assignments (Staff access)");
-                System.out.println("\n[4] Manage Occupant Profiles");
-                System.out.println("    └─ View and update occupant information (Staff access)");
-            }
-            
-            // Level 4 - Server Room / Command Center
-            if (card.getAccessLevel() >= 4) {
-                System.out.println("\n[5] System Administration");
-                System.out.println("    └─ Full system control and monitoring (Admin only)");
-            }
+            System.out.println("[2] Manage Occupant Profiles");
+            System.out.println("    └─ View and manage occupant information");
             
             System.out.println("\n[0] Logout");
-            System.out.print("\nSelect feature (0-" + getMaxFeatureOption(card) + "): ");
+            System.out.print("\nSelect feature (0-2): ");
             
             String choice = scanner.nextLine().trim();
             
@@ -212,18 +173,10 @@ public class KeycardAccessFeatures {
         }
     }
 
-    /**
-     * Get maximum feature option based on access level
-     */
-    private static int getMaxFeatureOption(Keycard card) {
-        if (card.getAccessLevel() >= 4) return 5;
-        if (card.getAccessLevel() >= 3) return 4;
-        if (card.getAccessLevel() >= 2) return 2;
-        return 1;
-    }
+
 
     /**
-     * Handle feature selection based on access level
+     * Handle feature selection
      * @param choice User's menu choice
      * @param user The logged-in occupant
      * @param card The occupant's keycard
@@ -236,47 +189,7 @@ public class KeycardAccessFeatures {
                 return false;
                 
             case "2":
-                if (card.getAccessLevel() >= 2) {
-                    displayFeature("MANAGE ROOM RESERVATIONS", 
-                        "This feature allows you to view available rooms and make reservations.\n" +
-                        "Access Level Required: Level 2 (Residential)\n" +
-                        "Feature coming soon...");
-                } else {
-                    accessDenied(card);
-                }
-                return false;
-                
-            case "3":
-                if (card.getAccessLevel() >= 3) {
-                    displayFeature("ASSIGN WORK DUTIES",
-                        "This feature allows you to manage and assign work duties to staff members.\n" +
-                        "Access Level Required: Level 3 (Staff)\n" +
-                        "Feature coming soon...");
-                } else {
-                    accessDenied(card);
-                }
-                return false;
-                
-            case "4":
-                if (card.getAccessLevel() >= 3) {
-                    displayFeature("MANAGE OCCUPANT PROFILES",
-                        "This feature allows you to view and manage occupant information.\n" +
-                        "Access Level Required: Level 3 (Staff)\n" +
-                        "Feature coming soon...");
-                } else {
-                    accessDenied(card);
-                }
-                return false;
-                
-            case "5":
-                if (card.getAccessLevel() >= 4) {
-                    displayFeature("SYSTEM ADMINISTRATION",
-                        "This feature provides full system control and monitoring.\n" +
-                        "Access Level Required: Level 4 (Admin)\n" +
-                        "Feature coming soon...");
-                } else {
-                    accessDenied(card);
-                }
+                ManageOccupantProfiles.main(new String[]{});
                 return false;
                 
             case "0":
@@ -297,62 +210,21 @@ public class KeycardAccessFeatures {
         System.out.println("╚════════════════════════════════════════════════════════════╝");
         
         System.out.println("\nYour Keycard Details:");
-        System.out.println("  Card Number   : " + card.getCardNumber());
+        System.out.println("  Keycard ID    : " + card.getKeycardId());
+        System.out.println("  Keycard Code  : " + card.getKeycardCode());
         System.out.println("  Holder        : " + user.getFullName());
-        System.out.println("  Occupant ID   : " + user.getId());
-        System.out.println("  Access Level  : " + card.getAccessLevelName() + " (Level " + card.getAccessLevel() + ")");
+        System.out.println("  Occupant ID   : " + user.getOccupantId());
         System.out.println("  Status        : " + (card.isActive() ? "ACTIVE" : "INACTIVE"));
-        System.out.println("  Issued Date   : " + card.getIssueDate());
-        System.out.println("\nYour Access Permissions:");
-        System.out.println("  ✓ Common Areas (Cafeteria, Library, Recreation)");
-        if (card.getAccessLevel() >= 2) {
-            System.out.println("  ✓ Residential Areas (Sleeping Quarters, Personal Storage)");
-        }
-        if (card.getAccessLevel() >= 3) {
-            System.out.println("  ✓ Restricted Areas (Medical Bay, Armory, Lab)");
-        }
-        if (card.getAccessLevel() >= 4) {
-            System.out.println("  ✓ Server Room / Command Center (Full Control)");
-        }
+        System.out.println("  Issued At     : " + card.getIssuedAt());
         System.out.println();
         
         System.out.print("Press Enter to return to menu...");
         scanner.nextLine();
     }
 
-    /**
-     * Display a feature placeholder
-     */
-    private static void displayFeature(String title, String description) {
-        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
-        System.out.println("║  " + padCenter(title, 56) + "  ║");
-        System.out.println("╚════════════════════════════════════════════════════════════╝");
-        System.out.println("\n" + description + "\n");
-        
-        System.out.print("Press Enter to return to menu...");
-        scanner.nextLine();
-    }
 
-    /**
-     * Display access denied message
-     */
-    private static void accessDenied(Keycard card) {
-        System.out.println("\n❌ ACCESS DENIED");
-        System.out.println("Your access level (" + card.getAccessLevelName() + 
-                          ") does not permit this action.");
-        System.out.println("Please contact system administrator for access upgrade.\n");
-        System.out.print("Press Enter to return to menu...");
-        scanner.nextLine();
-    }
 
-    /**
-     * Helper method to center text .
-     */
-    private static String padCenter(String text, int width) {
-        if (text.length() >= width) return text;
-        int totalPad = width - text.length();
-        int leftPad = totalPad / 2;
-        int rightPad = totalPad - leftPad;
-        return " ".repeat(leftPad) + text + " ".repeat(rightPad);
-    }
+
+
+
 }

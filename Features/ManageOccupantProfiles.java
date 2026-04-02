@@ -1,16 +1,15 @@
 package Features;
 
-import java.util.ArrayList;
+import Models.Occupant;
+import Repositories.OccupantRepo;
 import java.util.Scanner;
+import java.util.List;
 
 public class ManageOccupantProfiles {
 
-    // POLYMORPHISM: List of superclass
-    static ArrayList<Person> persons = new ArrayList<>();
-    static int nextId = 1;
+    private static Scanner scanner = new Scanner(System.in);
 
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
+    public static void runMenu() {
         int choice = 0;
 
         do {
@@ -25,176 +24,144 @@ public class ManageOccupantProfiles {
             System.out.print("Select Option: ");
 
             try {
-                choice = sc.nextInt(); sc.nextLine();
+                choice = scanner.nextInt(); scanner.nextLine();
             } catch (Exception e) {
-                sc.nextLine();
+                scanner.nextLine();
                 System.out.println("❌ Invalid input.");
                 continue;
             }
 
             switch (choice) {
-                case 1: register(sc); break;
-                case 2: viewProfile(sc); break;
-                case 3: editProfile(sc); break;
+                case 1: register(); break;
+                case 2: viewProfile(); break;
+                case 3: editProfile(); break;
                 case 4: viewAll(); break;
-                case 5: System.out.println("🔒 Exiting Bunker System..."); break;
+                case 5: System.out.println("🔒 Returning to main menu..."); break;
                 default: System.out.println("❌ Invalid choice.");
             }
 
         } while (choice != 5);
     }
 
+    public static void main(String[] args) {
+        runMenu();
+    }
+
     // ================================
     // FEATURE 1: REGISTER OCCUPANT
     // ================================
-    static void register(Scanner sc) {
+    static void register() {
 
         System.out.println("\n--- BUNKER OCCUPANT REGISTRATION ---");
 
-        System.out.print("Name: ");
-        String name = sc.nextLine();
+        System.out.print("First Name: ");
+        String firstName = scanner.nextLine().trim();
 
-        System.out.print("Age: ");
-        int age;
-        try {
-            age = sc.nextInt(); sc.nextLine();
-        } catch (Exception e) {
-            sc.nextLine();
-            System.out.println("❌ Invalid age.");
+        System.out.print("Last Name: ");
+        String lastName = scanner.nextLine().trim();
+
+        System.out.print("Email: ");
+        String email = scanner.nextLine().trim();
+
+        System.out.print("Phone: ");
+        String phone = scanner.nextLine().trim();
+
+        // Validate input
+        if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty()) {
+            System.out.println("❌ ERROR: First name, last name, and email are required.");
             return;
         }
 
-        System.out.print("Role (Security/Medic/Engineer/Logistics/etc): ");
-        String role = sc.nextLine();
-
-        System.out.print("Contact Number: ");
-        String contact = sc.nextLine();
-
-        // INHERITANCE
-        Occupant o = new Occupant(nextId++, name, age, role, contact);
-
-        persons.add(o); // POLYMORPHISM
-
-        System.out.println("✅ Occupant successfully registered into the bunker!");
+        // Create occupant in database
+        if (OccupantRepo.createOccupant(firstName, lastName, email, phone)) {
+            System.out.println("✅ Occupant successfully registered into the bunker!");
+        } else {
+            System.out.println("❌ ERROR: Failed to register occupant.");
+        }
     }
 
     // ================================
     // FEATURE 2: VIEW PROFILE
     // ================================
-    static void viewProfile(Scanner sc) {
+    static void viewProfile() {
 
         System.out.print("\nEnter Occupant ID: ");
-        int id = sc.nextInt();
+        int id = scanner.nextInt(); scanner.nextLine();
 
-        for (Person p : persons) {
-            if (p.getId() == id) {
-                display(p);
-                return;
-            }
+        Occupant occupant = OccupantRepo.getOccupantById(id);
+        if (occupant != null) {
+            display(occupant);
+        } else {
+            System.out.println("❌ Occupant not found.");
         }
-
-        System.out.println("❌ Occupant not found.");
     }
 
     // ================================
-    // FEATURE 2: EDIT PROFILE
+    // FEATURE 3: EDIT PROFILE
     // ================================
-    static void editProfile(Scanner sc) {
+    static void editProfile() {
 
         System.out.print("\nEnter Occupant ID: ");
-        int id = sc.nextInt(); sc.nextLine();
+        int id = scanner.nextInt(); scanner.nextLine();
 
-        for (Person p : persons) {
-            if (p.getId() == id) {
-
-                System.out.print("New Contact Number: ");
-                String contact = sc.nextLine();
-                if (!contact.isEmpty()) {
-                    p.setContact(contact);
-                }
-
-                System.out.println("✅ Profile updated successfully!");
-                return;
-            }
+        Occupant occupant = OccupantRepo.getOccupantById(id);
+        if (occupant == null) {
+            System.out.println("❌ Occupant not found.");
+            return;
         }
 
-        System.out.println("❌ Occupant not found.");
+        System.out.println("Current details:");
+        display(occupant);
+
+        System.out.print("New First Name (leave empty to keep current): ");
+        String firstName = scanner.nextLine().trim();
+        if (firstName.isEmpty()) firstName = occupant.getFirstName();
+
+        System.out.print("New Last Name (leave empty to keep current): ");
+        String lastName = scanner.nextLine().trim();
+        if (lastName.isEmpty()) lastName = occupant.getLastName();
+
+        System.out.print("New Email (leave empty to keep current): ");
+        String email = scanner.nextLine().trim();
+        if (email.isEmpty()) email = occupant.getEmail();
+
+        System.out.print("New Phone (leave empty to keep current): ");
+        String phone = scanner.nextLine().trim();
+        if (phone.isEmpty()) phone = occupant.getPhone();
+
+        if (OccupantRepo.updateOccupant(id, firstName, lastName, email, phone)) {
+            System.out.println("✅ Profile updated successfully!");
+        } else {
+            System.out.println("❌ ERROR: Failed to update profile.");
+        }
     }
 
     // ================================
-    // VIEW ALL OCCUPANTS
+    // FEATURE 4: VIEW ALL OCCUPANTS
     // ================================
     static void viewAll() {
 
-        if (persons.isEmpty()) {
+        List<Occupant> occupants = OccupantRepo.getAllOccupants();
+        if (occupants.isEmpty()) {
             System.out.println("⚠ No occupants in bunker.");
             return;
         }
 
-        for (Person p : persons) {
-            display(p);
+        for (Occupant occupant : occupants) {
+            display(occupant);
         }
     }
 
     // ================================
-    // DISPLAY (POLYMORPHISM)
+    // DISPLAY
     // ================================
-    static void display(Person p) {
+    static void display(Occupant occupant) {
         System.out.println("\n-------------------------------");
-        System.out.println("Occupant ID : " + p.getId());
-        System.out.println("Name        : " + p.getName());
-        System.out.println("Age         : " + p.getAge());
-        System.out.println("Role        : " + p.getRole());
-        System.out.println("Contact     : " + p.getContact());
-        System.out.println("Status      : " + p.getDescription()); // OVERRIDING
+        System.out.println("Occupant ID : " + occupant.getOccupantId());
+        System.out.println("Name        : " + occupant.getFirstName() + " " + occupant.getLastName());
+        System.out.println("Email       : " + occupant.getEmail());
+        System.out.println("Phone       : " + occupant.getPhone());
+        System.out.println("Registered  : " + occupant.getRegisteredAt());
         System.out.println("-------------------------------");
-    }
-
-    // ============================================
-    // SUPERCLASS (ABSTRACTION)
-    // ============================================
-    static abstract class Person {
-
-        protected int id;
-        protected String name;
-        protected int age;
-        protected String role;
-        protected String contact;
-
-        public Person(int id, String name, int age, String role, String contact) {
-            this.id = id;
-            this.name = name;
-            this.age = age;
-            this.role = role;
-            this.contact = contact;
-        }
-
-        public abstract String getDescription();
-
-        public int getId() { return id; }
-        public String getName() { return name; }
-        public int getAge() { return age; }
-        public String getRole() { return role; }
-        public String getContact() { return contact; }
-
-        public void setContact(String contact) { this.contact = contact; }
-    }
-
-    // ============================================
-    // SUBCLASS (INHERITANCE + OVERRIDING)
-    // ============================================
-    static class Occupant extends Person {
-
-        private String status;
-
-        public Occupant(int id, String name, int age, String role, String contact) {
-            super(id, name, age, role, contact);
-            this.status = "Active in Bunker";
-        }
-
-        @Override
-        public String getDescription() {
-            return status;
-        }
     }
 }
