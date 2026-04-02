@@ -9,8 +9,7 @@ public class ManageOccupantProfiles {
 
     private static Scanner scanner = new Scanner(System.in);
 
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
+    public static void runMenu() {
         int choice = 0;
 
         do {
@@ -25,43 +24,47 @@ public class ManageOccupantProfiles {
             System.out.print("Select Option: ");
 
             try {
-                choice = sc.nextInt(); sc.nextLine();
+                choice = scanner.nextInt(); scanner.nextLine();
             } catch (Exception e) {
-                sc.nextLine();
+                scanner.nextLine();
                 System.out.println("❌ Invalid input.");
                 continue;
             }
 
             switch (choice) {
-                case 1: register(sc); break;
-                case 2: viewProfile(sc); break;
-                case 3: editProfile(sc); break;
+                case 1: register(); break;
+                case 2: viewProfile(); break;
+                case 3: editProfile(); break;
                 case 4: viewAll(); break;
-                case 5: System.out.println("🔒 Exiting Bunker System..."); break;
+                case 5: System.out.println("🔒 Returning to main menu..."); break;
                 default: System.out.println("❌ Invalid choice.");
             }
 
         } while (choice != 5);
     }
 
+    public static void main(String[] args) {
+        runMenu();
+    }
+
     // ================================
     // FEATURE 1: REGISTER OCCUPANT
     // ================================
-    static void register(Scanner sc) {
+    static void register() {
 
         System.out.println("\n--- BUNKER OCCUPANT REGISTRATION ---");
 
         System.out.print("First Name: ");
-        String firstName = sc.nextLine().trim();
+        String firstName = scanner.nextLine().trim();
 
         System.out.print("Last Name: ");
-        String lastName = sc.nextLine().trim();
+        String lastName = scanner.nextLine().trim();
 
         System.out.print("Email: ");
-        String email = sc.nextLine().trim();
+        String email = scanner.nextLine().trim();
 
         System.out.print("Phone: ");
-        String phone = sc.nextLine().trim();
+        String phone = scanner.nextLine().trim();
 
         // Validate input
         if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty()) {
@@ -80,10 +83,10 @@ public class ManageOccupantProfiles {
     // ================================
     // FEATURE 2: VIEW PROFILE
     // ================================
-    static void viewProfile(Scanner sc) {
+    static void viewProfile() {
 
         System.out.print("\nEnter Occupant ID: ");
-        int id = sc.nextInt(); sc.nextLine();
+        int id = scanner.nextInt(); scanner.nextLine();
 
         Occupant occupant = OccupantRepo.getOccupantById(id);
         if (occupant != null) {
@@ -96,10 +99,10 @@ public class ManageOccupantProfiles {
     // ================================
     // FEATURE 3: EDIT PROFILE
     // ================================
-    static void editProfile(Scanner sc) {
+    static void editProfile() {
 
         System.out.print("\nEnter Occupant ID: ");
-        int id = sc.nextInt(); sc.nextLine();
+        int id = scanner.nextInt(); scanner.nextLine();
 
         Occupant occupant = OccupantRepo.getOccupantById(id);
         if (occupant == null) {
@@ -111,19 +114,19 @@ public class ManageOccupantProfiles {
         display(occupant);
 
         System.out.print("New First Name (leave empty to keep current): ");
-        String firstName = sc.nextLine().trim();
+        String firstName = scanner.nextLine().trim();
         if (firstName.isEmpty()) firstName = occupant.getFirstName();
 
         System.out.print("New Last Name (leave empty to keep current): ");
-        String lastName = sc.nextLine().trim();
+        String lastName = scanner.nextLine().trim();
         if (lastName.isEmpty()) lastName = occupant.getLastName();
 
         System.out.print("New Email (leave empty to keep current): ");
-        String email = sc.nextLine().trim();
+        String email = scanner.nextLine().trim();
         if (email.isEmpty()) email = occupant.getEmail();
 
         System.out.print("New Phone (leave empty to keep current): ");
-        String phone = sc.nextLine().trim();
+        String phone = scanner.nextLine().trim();
         if (phone.isEmpty()) phone = occupant.getPhone();
 
         if (OccupantRepo.updateOccupant(id, firstName, lastName, email, phone)) {
