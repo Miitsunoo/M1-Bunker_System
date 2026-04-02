@@ -3,7 +3,7 @@ package Features;
 import Models.Occupant;
 import Models.Keycard;
 import Repositories.OccupantRepo;
-import Repositories.KeycardRepository;
+import Repositories.KeycardRepo;
 import java.util.Scanner;
 import java.util.List;
 
@@ -92,7 +92,7 @@ public class KeycardAccessFeatures {
         }
         
         // Get user's keycard
-        List<Keycard> keycards = KeycardRepository.getKeycardsByOccupantId(occupantId);
+        List<Keycard> keycards = KeycardRepo.getKeycardsByOccupantId(occupantId);
         if (keycards.isEmpty()) {
             System.out.println("\n❌ LOGIN FAILED: No keycard assigned to this occupant.");
             return false;

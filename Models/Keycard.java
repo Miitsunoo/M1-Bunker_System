@@ -4,48 +4,45 @@ package Models;
  * Keycard Model - Represents a security keycard for bunker access
  */
 public class Keycard {
-    private int id;
-    private String cardNumber;
-    private int accessLevel;  // 1=Guest, 2=Standard, 3=Staff, 4=Admin
-    private int occupantId;   // Links to Occupant
+    private int keycardId;
+    private int occupantId;
+    private String keycardCode;
     private boolean isActive;
-    private String issueDate;
+    private String issuedAt;
 
     // Constructor
-    public Keycard(int id, String cardNumber, int accessLevel, int occupantId, boolean isActive, String issueDate) {
-        this.id = id;
-        this.cardNumber = cardNumber;
-        this.accessLevel = accessLevel;
+    public Keycard(int keycardId, int occupantId, String keycardCode, boolean isActive, String issuedAt) {
+        this.keycardId = keycardId;
         this.occupantId = occupantId;
+        this.keycardCode = keycardCode;
         this.isActive = isActive;
-        this.issueDate = issueDate;
+        this.issuedAt = issuedAt;
     }
 
     // Getters
-    public int getId() {
-        return id;
-    }
-
-    public String getCardNumber() {
-        return cardNumber;
-    }
-
-    public int getAccessLevel() {
-        return accessLevel;
-    }
-
-    public String getAccessLevelName() {
-        switch(accessLevel) {
-            case 1: return "Guest";
-            case 2: return "Standard";
-            case 3: return "Staff";
-            case 4: return "Admin";
-            default: return "Unknown";
-        }
+    public int getKeycardId() {
+        return keycardId;
     }
 
     public int getOccupantId() {
         return occupantId;
+    }
+
+    public String getKeycardCode() {
+        return keycardCode;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public String getIssuedAt() {
+        return issuedAt;
+    }
+
+    // Setters
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
     public boolean isActive() {
@@ -67,7 +64,7 @@ public class Keycard {
 
     @Override
     public String toString() {
-        return String.format("ID: %d | Card: %s | Level: %s | Occupant ID: %d | Active: %s | Issued: %s",
-                id, cardNumber, getAccessLevelName(), occupantId, isActive, issueDate);
+        return String.format("ID: %d | Code: %s | Occupant ID: %d | Active: %s | Issued: %s",
+                keycardId, keycardCode, occupantId, isActive, issuedAt);
     }
 }
