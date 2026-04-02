@@ -45,23 +45,6 @@ public class Keycard {
         isActive = active;
     }
 
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public String getIssueDate() {
-        return issueDate;
-    }
-
-    // Setters
-    public void setActive(boolean active) {
-        isActive = active;
-    }
-
-    public void setAccessLevel(int level) {
-        this.accessLevel = level;
-    }
-
     @Override
     public String toString() {
         return String.format("ID: %d | Code: %s | Occupant ID: %d | Active: %s | Issued: %s",
