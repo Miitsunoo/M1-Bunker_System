@@ -1,70 +1,186 @@
 package Repositories;
 
 import Models.Occupant;
-import java.util.ArrayList;
+import Database.DatabaseConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
- * OccupantRepo - Hardcoded occupant data storage
+ * OccupantRepo - Repository for Occupant database operations
  */
 public class OccupantRepo {
-    private static List<Occupant> occupants = new ArrayList<>();
-
-    // Static initializer - loads hardcoded occupant data
-    static {
-        occupants.add(new Occupant(1, "Alexander", "Stone", "Commander", "101"));
-        occupants.add(new Occupant(2, "Sarah", "Mitchell", "Staff Officer", "102"));
-        occupants.add(new Occupant(3, "David", "Chen", "Technician", "103"));
-        occupants.add(new Occupant(4, "Emma", "Rodriguez", "Medic", "104"));
-        occupants.add(new Occupant(5, "James", "Thompson", "Guard", "105"));
-        occupants.add(new Occupant(6, "Lisa", "Anderson", "Scientist", "106"));
-        occupants.add(new Occupant(7, "Michael", "Jackson", "Engineer", "107"));
-        occupants.add(new Occupant(8, "Rachel", "Williams", "Administrator", "108"));
-        occupants.add(new Occupant(9, "Kevin", "Davis", "Support Staff", "109"));
-        occupants.add(new Occupant(10, "Jessica", "Martinez", "Technician", "110"));
-    }
 
     /**
-     * Get all occupants
+     * Verify if an occupant exists with the given credentials
+     * @param firstName First name of the occupant
+     * @param lastName Last name of the occupant
+     * @param occupantId ID of the occupant
+     * @return true if occupant exists and credentials match, false otherwise
      */
-    public static List<Occupant> getAllOccupants() {
-        return new ArrayList<>(occupants);
+    public static boolean verifyOccupant(String firstName, String lastName, int occupantId) {
+        String sql = "SELECT COUNT(*) FROM occupants WHERE first_name = ? AND last_name = ? AND occupant_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            stmt.setInt(3, occupantId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error verifying occupant: " + e.getMessage());
+        }
+
+        return false;
     }
 
     /**
      * Get occupant by ID
+     * @param occupantId ID of the occupant to retrieve
+     * @return Occupant object if found, null otherwise
      */
-    public static Occupant getOccupantById(int id) {
-        for (Occupant occupant : occupants) {
-            if (occupant.getId() == id) {
-                return occupant;
+    public static Occupant getOccupantById(int occupantId) {
+        String sql = "SELECT occupant_id, first_name, last_name, email, phone, registered_at FROM occupants WHERE occupant_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, occupantId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Occupant(
+                        rs.getInt("occupant_id"),
+                        rs.getString("first_name"),
+                        rs.getString("last_name"),
+                        rs.getString("email"),
+                        rs.getString("phone"),
+                        rs.getString("registered_at")
+                    );
+                }
             }
+        } catch (SQLException e) {
+            System.err.println("Error getting occupant by ID: " + e.getMessage());
         }
+
         return null;
     }
 
     /**
-     * Get occupant by first and last name
+     * Create a new occupant
+     * @param firstName First name
+     * @param lastName Last name
+     * @param email Email address
+     * @param phone Phone number
+     * @return true if created successfully, false otherwise
      */
-    public static Occupant getOccupantByName(String firstName, String lastName) {
-        for (Occupant occupant : occupants) {
-            if (occupant.getFirstName().equalsIgnoreCase(firstName) &&
-                occupant.getLastName().equalsIgnoreCase(lastName)) {
-                return occupant;
-            }
+    public static boolean createOccupant(String firstName, String lastName, String email, String phone) {
+        String sql = "INSERT INTO occupants (first_name, last_name, email, phone) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            stmt.setString(3, email);
+            stmt.setString(4, phone);
+
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error creating occupant: " + e.getMessage());
         }
-        return null;
+
+        return false;
     }
 
     /**
-     * Verify occupant exists by ID, first name, and last name
+     * Update occupant information
+     * @param occupantId ID of the occupant to update
+     * @param firstName New first name
+     * @param lastName New last name
+     * @param email New email
+     * @param phone New phone
+     * @return true if updated successfully, false otherwise
      */
-    public static boolean verifyOccupant(String firstName, String lastName, int occupantId) {
-        Occupant occupant = getOccupantById(occupantId);
-        if (occupant == null) {
-            return false;
+    public static boolean updateOccupant(int occupantId, String firstName, String lastName, String email, String phone) {
+        String sql = "UPDATE occupants SET first_name = ?, last_name = ?, email = ?, phone = ? WHERE occupant_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            stmt.setString(3, email);
+            stmt.setString(4, phone);
+            stmt.setInt(5, occupantId);
+
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating occupant: " + e.getMessage());
         }
-        return occupant.getFirstName().equalsIgnoreCase(firstName) &&
-               occupant.getLastName().equalsIgnoreCase(lastName);
+
+        return false;
+    }
+
+    /**
+     * Get all occupants
+     * @return List of all occupants
+     */
+    public static List<Occupant> getAllOccupants() {
+        List<Occupant> occupants = new ArrayList<>();
+        String sql = "SELECT occupant_id, first_name, last_name, email, phone, registered_at FROM occupants";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                occupants.add(new Occupant(
+                    rs.getInt("occupant_id"),
+                    rs.getString("first_name"),
+                    rs.getString("last_name"),
+                    rs.getString("email"),
+                    rs.getString("phone"),
+                    rs.getString("registered_at")
+                ));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting all occupants: " + e.getMessage());
+        }
+
+        return occupants;
+    }
+
+    /**
+     * Delete an occupant by ID
+     * @param occupantId ID of the occupant to delete
+     * @return true if deleted successfully, false otherwise
+     */
+    public static boolean deleteOccupant(int occupantId) {
+        String sql = "DELETE FROM occupants WHERE occupant_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, occupantId);
+
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error deleting occupant: " + e.getMessage());
+        }
+
+        return false;
     }
 }
